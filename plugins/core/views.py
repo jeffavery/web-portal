@@ -23,6 +23,7 @@ from .helpers import (
     get_icon_names,
     get_icon_path,
     get_settings,
+    valid_color_name,
 )
 
 logger = logging.getLogger("web-portal")
@@ -183,7 +184,14 @@ async def get_engines_delete(engine_id: int):
 @login_admin_required
 async def get_links_index():
     links = await models.Link.all()
-    return await render_template("core/links/index.jinja", links=links)
+    appearances = {
+        appearance.link_id: appearance for appearance in await models.LinkAppearance.all()
+    }
+    return await render_template(
+        "core/links/index.jinja",
+        links=links,
+        appearances=appearances,
+    )
 
 
 @blueprint.get("/links/new")
@@ -202,17 +210,20 @@ async def get_link_new():
 async def get_link_edit(link_id: int):
     icon_names = sorted(get_icon_names())
     link = await models.Link.filter(id=link_id).get()
+    appearance = await models.LinkAppearance.get_or_none(link_id=link_id)
 
     return await render_template(
         "core/links/edit.jinja",
         icon_names=icon_names,
         link=link,
+        appearance=appearance,
     )
 
 
 @blueprint.get("/links/<int:link_id>/delete")
 @login_admin_required
 async def get_link_delete(link_id: int):
+    await models.LinkAppearance.filter(link_id=link_id).delete()
     await models.Link.filter(id=link_id).delete()
     await flash("deleted link", "ok")
 
@@ -227,11 +238,20 @@ async def post_link_new():
     name = form["name"].strip()
     url = form["url"].strip()
     color_name = form["color_name"].strip()
+    background_color_name = form.get("background_color_name", "no-color").strip()
+    text_color_name = form.get("text_color_name", "auto").strip()
     icon_name = form.get("icon-name")
 
     if not name:
         await flash("link name cannot be blank", "error")
         return redirect(url_for(".get_link_new"))
+
+    if not valid_color_name(color_name):
+        abort(400)
+    if not valid_color_name(background_color_name):
+        abort(400)
+    if not valid_color_name(text_color_name, allow_auto=True):
+        abort(400)
 
     if icon_name and get_icon_path(icon_name) is None:
         logger.warning(
@@ -241,11 +261,16 @@ async def post_link_new():
         await flash("failed to find icon", "error")
         return redirect(url_for(".get_link_new"))
 
-    await models.Link.create(
+    link = await models.Link.create(
         name=name,
         url=url,
         color_name=color_name,
         icon_name=icon_name,
+    )
+    await models.LinkAppearance.create(
+        link_id=link.id,
+        background_color_name=background_color_name,
+        text_color_name=text_color_name,
     )
 
     await flash(f"created link with name '{name}'", "ok")
@@ -263,11 +288,20 @@ async def post_link_edit(link_id: int):
     name = form["name"].strip()
     url = form["url"].strip()
     color_name = form["color_name"].strip()
+    background_color_name = form.get("background_color_name", "no-color").strip()
+    text_color_name = form.get("text_color_name", "auto").strip()
     icon_name = form.get("icon-name")
 
     if not name:
         await flash("link name cannot be blank", "error")
         return redirect(url_for(".get_link_edit", link_id=link_id))
+
+    if not valid_color_name(color_name):
+        abort(400)
+    if not valid_color_name(background_color_name):
+        abort(400)
+    if not valid_color_name(text_color_name, allow_auto=True):
+        abort(400)
 
     # Keep a previously selected icon even if its file is temporarily unavailable.
     # This prevents an unrelated edit from silently clearing the saved icon.
@@ -289,6 +323,14 @@ async def post_link_edit(link_id: int):
     )
 
     await link.save()
+
+    await models.LinkAppearance.update_or_create(
+        link_id=link.id,
+        defaults={
+            "background_color_name": background_color_name,
+            "text_color_name": text_color_name,
+        },
+    )
 
     await flash(f"updated link with name '{name}'", "ok")
 
@@ -333,9 +375,14 @@ async def post_widget_customise_link(widget_id: int):
     if widget_config is None:
         widget_config = {"links": []}
 
-    is_compact = (await request.form).get("is_compact", False, bool)
+    form = await request.form
+    density = form.get("density", "comfortable")
+    if density not in ("comfortable", "compact", "dense"):
+        abort(400)
 
-    widget_config["is_compact"] = is_compact
+    widget_config["density"] = density
+    widget_config["start_collapsed"] = form.get("start_collapsed", False, bool)
+    widget_config.pop("is_compact", None)
 
     await set_widget_config(widget_id, widget_config)
 

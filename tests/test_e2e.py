@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import signal
 import time
@@ -135,6 +136,11 @@ def test_edit_link_preserves_color_and_icon(page: Page):
     expect(page.locator("#core-link-icon-name")).to_have_value("bitwarden")
 
     page.locator("#core-link-name").fill("Bitwarden Vault")
+    page.locator("#core-link-background-color-name").select_option("yellow")
+    page.locator("#core-link-text-color-name").select_option("black")
+    expect(page.locator(".core-link-preview .inner")).to_have_class(
+        re.compile(r"\byellow\b.*\btile-text-black\b")
+    )
     page.locator("button[type=submit]").click()
     page.wait_for_url(f"{BASE_URL}/plugins/core/links")
 
@@ -142,3 +148,43 @@ def test_edit_link_preserves_color_and_icon(page: Page):
     edited_row.get_by_title("Edit").click()
     expect(page.locator("#core-link-color-name")).to_have_value("cyan")
     expect(page.locator("#core-link-icon-name")).to_have_value("bitwarden")
+    expect(page.locator("#core-link-background-color-name")).to_have_value("yellow")
+    expect(page.locator("#core-link-text-color-name")).to_have_value("black")
+
+
+def test_link_widget_dashboard_controls(page: Page):
+    page.goto(f"{BASE_URL}/_e2e/login_as_user/admin")
+    page.goto(f"{BASE_URL}/settings/dashboard/edit")
+
+    page.locator("#widget-name").fill("Shop Tools")
+    page.locator("#widget-widget-id").select_option(label="core__links")
+    page.locator('form[action$="/dashboard/widget/add"] button[type=submit]').click()
+
+    placed_widget = page.locator("section.panel").filter(has_text="Placed Widgets")
+    placed_widget.locator("div").filter(has_text="Shop Tools, core__links").get_by_title(
+        "Edit"
+    ).click()
+
+    general_form = page.locator('form[action*="/settings/dashboard/"]').first
+    general_form.locator("#widget-show-header").check()
+    general_form.locator("button[type=submit]").click()
+
+    custom_form = page.locator('form[action*="/plugins/core/widget/links/"][action*="customise"]')
+    custom_form.locator("#core-widget-link-density").select_option("dense")
+    custom_form.locator("#core-widget-link-start-collapsed").check()
+    custom_form.locator("button[type=submit]").click()
+
+    page.goto(BASE_URL)
+    expect(page.get_by_test_id("linkmanager_nav")).to_be_visible()
+    widget = page.locator("#widgets .widget-outer").filter(has_text="Shop Tools")
+    expect(widget.locator(".core-links-grid")).to_have_class(re.compile(r"\bdensity-dense\b"))
+    expect(widget.locator(".core-links-grid")).not_to_be_visible()
+    expect(widget.locator(".core-links-quick-add")).to_be_visible()
+
+    widget.locator(".widget-collapse-toggle").click()
+    expect(widget.locator(".core-links-grid")).to_be_visible()
+
+    widget.locator(".core-links-quick-add summary").click()
+    widget.locator(".core-links-quick-add select").select_option(label="Bitwarden")
+    widget.locator(".core-links-quick-add button[type=submit]").click()
+    expect(page.locator("#widgets .widget-outer").filter(has_text="Bitwarden")).to_be_visible()

@@ -10,6 +10,32 @@ from web_portal.plugin_api import get_plugin_data_path
 
 ICONS_PATH = get_plugin_data_path("core") / "icons"
 VALID_UPLOAD_EXTENSIONS = (".zip",)
+COLOR_NAMES = (
+    "white",
+    "grey",
+    "grey-black",
+    "black",
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "green-blue",
+    "cyan",
+    "blue",
+    "purple",
+    "pink",
+    "pink-red",
+    "red-alt",
+    "orange-alt",
+    "yellow-alt",
+    "green-alt",
+    "green-blue-alt",
+    "cyan-alt",
+    "blue-alt",
+    "purple-alt",
+    "pink-alt",
+    "pink-red-alt",
+)
 
 
 class PluginSettings(BaseSettings):
@@ -34,7 +60,15 @@ def get_icon_names() -> set[str]:
 
         :return: Icon names
     """
-    return {path.stem for path in ICONS_PATH.glob("**/*")}
+    return {path.stem for path in ICONS_PATH.glob("**/*") if path.is_file()}
+
+
+def valid_color_name(value: str, *, allow_auto: bool = False) -> bool:
+    if value == "no-color":
+        return True
+    if allow_auto and value == "auto":
+        return True
+    return value in COLOR_NAMES
 
 
 def get_icon_path(icon_name: str) -> Path | None:

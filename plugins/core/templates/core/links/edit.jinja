@@ -3,14 +3,25 @@
 {% block main %}
 <section class="panel">
     <h2>Edit Link</h2>
-    <form action="{{ url_for('.post_link_edit', link_id=link.id) }}" method="post">
+    <form action="{{ url_for('.post_link_edit', link_id=link.id) }}" method="post" data-link-appearance-form>
         <label for="core-link-url">URL</label>
         <input type="text" name="url" id="core-link-url" placeholder="https://..." value="{{ link.url }}" required>
         <label for="core-link-name">Name</label>
         <input type="text" name="name" id="core-link-name" placeholder="name..." value="{{ link.name }}" required>
-        <label for="core-link-color-name">Color</label>
+        <label for="core-link-color-name">Accent Color</label>
         <select name="color_name" id="core-link-color-name">
             {% set selected_color = link.color_name %}
+            {% include "/shared/includes/options-color.jinja" %}
+        </select>
+        <label for="core-link-background-color-name">Tile Background</label>
+        <select name="background_color_name" id="core-link-background-color-name">
+            {% set selected_color = appearance.background_color_name if appearance else "no-color" %}
+            {% include "/shared/includes/options-color.jinja" %}
+        </select>
+        <label for="core-link-text-color-name">Text Color</label>
+        <select name="text_color_name" id="core-link-text-color-name">
+            {% set selected_color = appearance.text_color_name if appearance else "auto" %}
+            <option value="auto" {% if selected_color == "auto" %}selected{% endif %}>Automatic</option>
             {% include "/shared/includes/options-color.jinja" %}
         </select>
         <label for="core-link-icon-name">Icon Name</label>
@@ -23,6 +34,17 @@
             <option {% if link.icon_name==name %}selected{% endif %} value="{{ name }}">{{ name }}</option>
             {% endfor %}
         </select>
+        <div class="core-link-preview" aria-label="Link appearance preview">
+            <strong>Preview</strong>
+            <div class="core-links-grid density-compact">
+                <div class="outer">
+                    <div class="chip {{ link.color_name }}"></div>
+                    <div class="inner {{ appearance.background_color_name if appearance else 'no-color' }} tile-text-{{ appearance.text_color_name if appearance else 'auto' }}">
+                        <span>{{ link.name }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <button type="submit">Save</button>
     </form>
 </section>

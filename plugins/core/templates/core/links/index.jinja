@@ -12,7 +12,9 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th class="hide-on-narrow">Color</th>
+                <th class="hide-on-narrow">Accent</th>
+                <th class="hide-on-narrow">Background</th>
+                <th class="hide-on-narrow">Text</th>
                 <th class="hide-on-narrow">Icon</th>
                 <th class="hide-on-narrow">URL</th>
                 <th></th>
@@ -22,7 +24,10 @@
             {% for link in links %}
             <tr>
                 <td>{{ link.name }}</td>
+                {% set appearance = appearances.get(link.id) %}
                 <td class="hide-on-narrow">{{ link.color_name }}</td>
+                <td class="hide-on-narrow">{{ appearance.background_color_name if appearance else "no-color" }}</td>
+                <td class="hide-on-narrow">{{ appearance.text_color_name if appearance else "auto" }}</td>
                 <td class="hide-on-narrow">{{ link.icon_name }}</td>
                 <td class="hide-on-narrow"><input type="text" readonly value="{{ link.url }}"></td>
                 <td class="bnt-group">

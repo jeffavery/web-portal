@@ -3,11 +3,23 @@
 {% block main %}
 <div id="widgets">
     {% for widget in rendered_widgets %}
-    <div class="widget-outer {{ widget[0].widget.internal_name }}" id="widget-{{ widget[0].id }}">
+    {% set is_link_widget = widget[0].widget.internal_name == "core__links" %}
+    {% set widget_config = widget[0].config or {} %}
+    <div class="widget-outer {{ widget[0].widget.internal_name }}" id="widget-{{ widget[0].id }}"
+        {% if is_link_widget and widget[0].show_header %}data-collapsible="true"
+        data-start-collapsed="{{ 'true' if widget_config.get('start_collapsed') else 'false' }}"{% endif %}>
         {% if widget[0].show_header %}
-        <h2 class="widget-heading {{ widget[0].widget.internal_name }}">{{ widget[0].name }}</h2>
+        <div class="widget-heading-bar">
+            {% if is_link_widget %}
+            <button type="button" class="widget-collapse-toggle icon-bnt" aria-expanded="true"
+                aria-controls="widget-content-{{ widget[0].id }}" title="Collapse section">
+                {{ macros.feather_img('chevron-down') }}
+            </button>
+            {% endif %}
+            <h2 class="widget-heading {{ widget[0].widget.internal_name }}">{{ widget[0].name }}</h2>
+        </div>
         {% endif %}
-        <div class="widget-inner {{ widget[0].widget.internal_name }}">
+        <div class="widget-inner {{ widget[0].widget.internal_name }}" id="widget-content-{{ widget[0].id }}">
             {{ widget[1] | safe }}
         </div>
     </div>

@@ -11,14 +11,24 @@ from .helpers import get_settings
 logger = logging.getLogger("web-portal")
 
 
-async def render_widget_link(config: dict) -> str:
+async def render_widget_link(config: dict, widget_id: int) -> str:
     # TODO: auto remove links that haven't been found due to deletion
-    links = await models.Link.filter(id__in=config.get("links", [])).order_by("name").all()
+    links, all_links, appearances = await asyncio.gather(
+        models.Link.filter(id__in=config.get("links", [])).order_by("name").all(),
+        models.Link.all().order_by("name"),
+        models.LinkAppearance.all(),
+    )
+    added_link_ids = set(config.get("links", []))
+    available_links = [link for link in all_links if link.id not in added_link_ids]
+    appearances_by_link_id = {appearance.link_id: appearance for appearance in appearances}
 
     return await render_template(
         "core/includes/widgets/link.jinja",
         links=links,
+        available_links=available_links,
+        appearances=appearances_by_link_id,
         widget_config=config,
+        widget_id=widget_id,
     )
 
 
@@ -43,7 +53,7 @@ async def render_widget(internal_name, widget_id: int, config: dict | None) -> s
         case "clock":
             return await render_template("core/includes/widgets/clock.jinja", widget_id=widget_id)
         case "links":
-            return await render_widget_link(config)
+            return await render_widget_link(config, widget_id)
         case "search":
             return await render_widget_search(config)
         case _:

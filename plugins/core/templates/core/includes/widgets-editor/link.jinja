@@ -24,9 +24,17 @@
     <h2>Customise Widget</h2>
     <form action="{{ url_for('core.post_widget_customise_link', widget_id=dash_widget_id, back_to=back_to_url) }}"
         method="post">
-        <label for="core-widget-link-is_compact">Compact Links</label>
-        <input type="checkbox" name="is_compact" id="core-widget-link-is_compact" value="1" {% if
-            widget_config.is_compact %}checked{% endif %}>
+        <label for="core-widget-link-density">Tile Density</label>
+        {% set current_density = widget_config.get('density', 'compact' if widget_config.get('is_compact') else 'comfortable') %}
+        <select name="density" id="core-widget-link-density">
+            <option value="comfortable" {% if current_density == "comfortable" %}selected{% endif %}>Comfortable</option>
+            <option value="compact" {% if current_density == "compact" %}selected{% endif %}>Compact</option>
+            <option value="dense" {% if current_density == "dense" %}selected{% endif %}>Dense</option>
+        </select>
+        <label for="core-widget-link-start-collapsed">Start Collapsed</label>
+        <input type="checkbox" name="start_collapsed" id="core-widget-link-start-collapsed" value="1" {% if
+            widget_config.get('start_collapsed') %}checked{% endif %}>
+        <p class="form-help">The portal remembers whether you last left this section open or collapsed in each browser.</p>
         <button type="submit">Save</button>
     </form>
 </section>

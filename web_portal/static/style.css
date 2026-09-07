@@ -229,6 +229,7 @@ footer a {
 }
 
 .widget-outer {
+    position: relative;
     border-radius: var(--border-radius);
     padding: 10px;
     margin-bottom: 8px;
@@ -237,6 +238,36 @@ footer a {
 
 .widget-heading {
     text-align: center;
+}
+
+.widget-heading-bar {
+    display: grid;
+    grid-template-columns: 3rem 1fr 3rem;
+    align-items: center;
+    min-height: 3rem;
+}
+
+.widget-heading-bar .widget-heading {
+    grid-column: 2;
+    margin: .4rem 0;
+}
+
+.widget-collapse-toggle {
+    grid-column: 1;
+    padding: .45rem;
+}
+
+.widget-collapse-toggle .feather-icon {
+    transition: transform 180ms ease;
+}
+
+.widget-outer.is-collapsed .widget-collapse-toggle .feather-icon {
+    transform: rotate(-90deg);
+}
+
+.form-help {
+    margin: .35rem 0 .75rem;
+    opacity: .8;
 }
 
 .panel {

@@ -3,13 +3,25 @@
 {% block main %}
 <section class="panel">
     <h2>New Link</h2>
-    <form action="{{ url_for('.post_link_new') }}" method="post">
+    <form action="{{ url_for('.post_link_new') }}" method="post" data-link-appearance-form>
             <label for="core-link-url">URL</label>
             <input type="text" name="url" id="core-link-url" required placeholder="https://...">
             <label for="core-link-name">Name</label>
             <input type="text" name="name" id="core-link-name" required placeholder="name...">
-            <label for="core-link-color-name">Color</label>
+            <label for="core-link-color-name">Accent Color</label>
             <select name="color_name" id="core-link-color-name">
+                {% set selected_color = "no-color" %}
+                {% include "/shared/includes/options-color.jinja" %}
+            </select>
+            <label for="core-link-background-color-name">Tile Background</label>
+            <select name="background_color_name" id="core-link-background-color-name">
+                {% set selected_color = "no-color" %}
+                {% include "/shared/includes/options-color.jinja" %}
+            </select>
+            <label for="core-link-text-color-name">Text Color</label>
+            <select name="text_color_name" id="core-link-text-color-name">
+                <option value="auto" selected>Automatic</option>
+                {% set selected_color = "auto" %}
                 {% include "/shared/includes/options-color.jinja" %}
             </select>
             <label for="core-link-icon-name">Icon Name</label>
@@ -19,6 +31,15 @@
                 <option value="{{ name }}">{{ name }}</option>
                 {% endfor %}
             </select>
+            <div class="core-link-preview" aria-label="Link appearance preview">
+                <strong>Preview</strong>
+                <div class="core-links-grid density-compact">
+                    <div class="outer">
+                        <div class="chip no-color"></div>
+                        <div class="inner no-color tile-text-auto"><span>New Link</span></div>
+                    </div>
+                </div>
+            </div>
             <button type="submit">Save</button>
     </form>
 </section>

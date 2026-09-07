@@ -20,6 +20,18 @@ class Link(Model):
         table = "core__link"
 
 
+class LinkAppearance(Model):
+    """Optional appearance settings stored separately for backwards compatibility."""
+
+    id = IntField(pk=True)
+    link_id = IntField(unique=True)
+    background_color_name = CharField(128, default="no-color")
+    text_color_name = CharField(128, default="auto")
+
+    class Meta:
+        table = "core__linkappearance"
+
+
 class SearchEngine(Model):
     id = IntField(pk=True)
     name = CharField(128, unique=True)

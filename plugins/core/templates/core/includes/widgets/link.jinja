@@ -1,12 +1,33 @@
-{% for link in links %}
-<div class="outer">
-    <div class="chip {{ link.color_name }}"></div>
-    <a class="inner {% if widget_config.is_compact %} compact{% endif %}" href="{{ link.url }}" {%- if config.plugin__core.OPEN_TO_NEW_TAB -%}target="_blank" {%-
-        endif -%} rel="noopener noreferrer" aria-label="{{ link.name }}">
-        {%- if link.icon_name -%}
-        <img src="{{ url_for('core.get_icon', icon_name=link.icon_name) }}" alt="icon for '{{ link.name }}' link">
-        {%- endif -%}
-        <span>{{ link.name }}</span>
-    </a>
+{% if current_user.is_authenticated and available_links %}
+<details class="core-links-quick-add">
+    <summary class="icon-bnt" title="Add an existing link" aria-label="Add an existing link">+</summary>
+    <form action="{{ url_for('core.post_widget_add_link', widget_id=widget_id, back_to=url_for('portal.portal')) }}" method="post">
+        <label for="core-quick-add-{{ widget_id }}">Add link</label>
+        <select name="link-id" id="core-quick-add-{{ widget_id }}" required>
+            <option value="">** Select Link **</option>
+            {% for available_link in available_links %}
+            <option value="{{ available_link.id }}">{{ available_link.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Add</button>
+    </form>
+</details>
+{% endif %}
+
+<div class="core-links-grid density-{{ widget_config.get('density', 'compact' if widget_config.get('is_compact') else 'comfortable') }}">
+    {% for link in links %}
+    {% set appearance = appearances.get(link.id) %}
+    {% set background_color = appearance.background_color_name if appearance else "no-color" %}
+    {% set text_color = appearance.text_color_name if appearance else "auto" %}
+    <div class="outer">
+        <div class="chip {{ link.color_name }}"></div>
+        <a class="inner {{ background_color }} tile-text-{{ text_color }}" href="{{ link.url }}" {%- if config.plugin__core.OPEN_TO_NEW_TAB -%}target="_blank" {%-
+            endif -%} rel="noopener noreferrer" aria-label="{{ link.name }}">
+            {%- if link.icon_name -%}
+            <img src="{{ url_for('core.get_icon', icon_name=link.icon_name) }}" alt="icon for '{{ link.name }}' link">
+            {%- endif -%}
+            <span>{{ link.name }}</span>
+        </a>
+    </div>
+    {% endfor %}
 </div>
-{% endfor %}
